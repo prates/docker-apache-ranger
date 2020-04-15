@@ -1,0 +1,63 @@
+version: "2"
+services:
+  postgres-server:
+    build:
+      context: .
+      dockerfile: Dockerfile-postgres
+    image: prates/ranger-postgres
+    ports:
+      - "5432:5432"
+
+  ranger-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile-ranger
+    image: prates/ranger-admin
+    stdin_open: true
+    tty: true
+    depends_on:
+      - "postgres-server"
+    ports:
+      - "6080:6080"
+
+  mysql:
+    build:
+      context: .
+      dockerfile: Dockerfile-mysql
+    image: prates/mysql
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=mysecret
+    ports:
+     - "13306:3306"
+    volumes:
+     - $PWD/container_data/mysql:/var/lib/mysql
+
+
+  hive:
+    build:
+      context: .
+      dockerfile: Dockerfile-hive
+    image: prates/hive
+    container_name: hive
+    ports:
+     - "10000:10000"
+     - "9083:9083"
+    volumes:
+     - $PWD/hive/conf/hive-site.xml:/opt/hive/conf/hive-site.xml
+    links:
+      - "mysql:mysql"
+
+
+  presto-coordinator:
+    build:
+      context: .
+      dockerfile: Dockerfile-presto 
+    image: prates/prestodb
+    ports:
+      - "8080:8080"
+
+  presto-worker:
+    image: prates/prestodb
+    volumes:
+      - ./prestodb/worker/etc:/home/presto/etc

@@ -1,0 +1,9 @@
+
+FROM postgres:10.3
+
+LABEL maintainer="alexandre.b.prates@gmail.com"
+
+LABEL version=1.0.0
+
+COPY ranger-postgres/create_users.sql /docker-entrypoint-initdb.d/
+

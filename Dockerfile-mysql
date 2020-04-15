@@ -1,0 +1,6 @@
+FROM mysql:5.6.38
+LABEL maintainer="alexandre.b.prates@gmail.com"
+
+
+ENV MYSQL_ROOT_PASSWORD mysecret
+

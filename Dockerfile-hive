@@ -1,0 +1,47 @@
+FROM openjdk:8u212-jre
+LABEL maintainer="alexandre.b.prates@gmail.com"
+
+# -- install Hadoop
+
+RUN wget https://archive.apache.org/dist/hadoop/common/hadoop-2.8.5/hadoop-2.8.5.tar.gz
+RUN tar xf hadoop-2.8.5.tar.gz
+RUN mv hadoop-2.8.5 /opt
+RUN ln -s /opt/hadoop-2.8.5 /opt/hadoop
+RUN rm hadoop-2.8.5.tar.gz
+ENV HADOOP_HOME /opt/hadoop
+ENV JAVA_HOME /usr/local/openjdk-8/
+
+# -- install Hive
+
+RUN wget http://apache.claz.org/hive/hive-2.3.6/apache-hive-2.3.6-bin.tar.gz
+RUN tar xf apache-hive-2.3.6-bin.tar.gz
+RUN mv apache-hive-2.3.6-bin /opt
+RUN ln -s /opt/apache-hive-2.3.6-bin /opt/hive
+RUN rm apache-hive-2.3.6-bin.tar.gz
+
+RUN mkdir -p /shared_data
+
+# -- install MySQL client jar for Hive
+
+RUN wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.45.tar.gz
+RUN tar xf mysql-connector-java-5.1.45.tar.gz
+RUN mv mysql-connector-java-5.1.45/mysql-connector-java-5.1.45-bin.jar /opt/hive/lib
+RUN rm -rf mysql-connector-java-5.1.45
+
+# install hive plugin for apache ranger
+RUN mkdir /opt/apache-ranger-plugin
+COPY hive/plugin_ranger/ranger-1.2.0-hive-plugin.tar.gz /opt/apache-ranger-plugin/
+RUN cd /opt/apache-ranger-plugin/ \
+   && tar zxf ranger-1.2.0-hive-plugin.tar.gz \
+   && ls -ltr
+COPY hive/conf/install.properties  /opt/apache-ranger-plugin/ranger-1.2.0-hive-plugin/
+RUN /opt/apache-ranger-plugin/ranger-1.2.0-hive-plugin/enable-hive-plugin.sh
+
+
+COPY hive/entrypoint.sh /
+RUN chmod +X ./entrypoint.sh
+RUN ls
+ENTRYPOINT ["./entrypoint.sh"]
+#ENTRYPOINT ["/opt/hive/bin/hive"]
+#CMD ["--service", "metastore"]
+
